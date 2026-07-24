@@ -8,11 +8,14 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <linux/capability.h>
+#include <seccomp.h>
 
 #define STACK_SIZE (1024 * 1024)
 
@@ -112,6 +115,68 @@ static int setup_loopback(void) {
     return 0;
 }
 
+static void drop_capabilities(void) {
+    struct __user_cap_header_struct hdr = { .version = _LINUX_CAPABILITY_VERSION_3, .pid = 0 };
+    struct __user_cap_data_struct data[2] = {{0}};
+
+    if (syscall(SYS_capset, &hdr, data) != 0) {
+        perror("capset");
+    }
+}
+
+static void set_resource_limits(void) {
+    struct rlimit rlim;
+
+    rlim.rlim_cur = rlim.rlim_max = 1024;
+    setrlimit(RLIMIT_NOFILE, &rlim);
+
+    rlim.rlim_cur = rlim.rlim_max = 128;
+    setrlimit(RLIMIT_NPROC, &rlim);
+
+    rlim.rlim_cur = rlim.rlim_max = 0;
+    setrlimit(RLIMIT_CORE, &rlim);
+
+    rlim.rlim_cur = rlim.rlim_max = 10485760;
+    setrlimit(RLIMIT_FSIZE, &rlim);
+}
+
+static void setup_seccomp(void) {
+    const char *mode = getenv("QO_SECCOMP");
+    if (mode == NULL || strcmp(mode, "off") == 0) {
+        return;
+    }
+
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_ALLOW);
+    if (ctx == NULL) {
+        fprintf(stderr, "Failed to initialize seccomp\n");
+        return;
+    }
+
+    uint32_t action = SCMP_ACT_LOG;
+    if (strcmp(mode, "enforce") == 0) {
+        action = SCMP_ACT_KILL_PROCESS;
+    }
+
+    seccomp_rule_add(ctx, action, SCMP_SYS(reboot), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(mount), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(umount2), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(pivot_root), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(unshare), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(setns), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(init_module), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(finit_module), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(delete_module), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(kexec_load), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(personality), 0);
+    seccomp_rule_add(ctx, action, SCMP_SYS(ptrace), 0);
+
+    if (seccomp_load(ctx) != 0) {
+        fprintf(stderr, "Failed to load seccomp filter\n");
+    }
+
+    seccomp_release(ctx);
+}
+
 static int spawn_shell(const char *rootfsPath) {
     pid_t shell_pid = fork();
     if (shell_pid < 0) {
@@ -178,6 +243,10 @@ static int child(void *arg) {
         }
     }
 
+    drop_capabilities();
+    set_resource_limits();
+    setup_seccomp();
+
     return spawn_shell(rootfsPath);
 }
 
@@ -194,7 +263,7 @@ int main(int argc, char **argv) {
     }
 
     pid_t pid = clone(child, stack + STACK_SIZE,
-                      CLONE_NEWUSER | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | SIGCHLD,
+                      CLONE_NEWUSER | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | CLONE_NEWIPC | CLONE_NEWCGROUP | SIGCHLD,
                       (void *)argv[1]);
     if (pid == -1) {
         perror("clone");
