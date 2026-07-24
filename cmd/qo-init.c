@@ -16,22 +16,24 @@
 #include <net/if.h>
 #include <linux/capability.h>
 #include <seccomp.h>
+#include <dirent.h>
 
 #define STACK_SIZE (1024 * 1024)
 
-static void write_userns_map(const char *path, const char *content) {
+static int write_userns_map(const char *path, const char *content) {
     int fd = open(path, O_WRONLY);
     if (fd < 0) {
         perror(path);
-        _exit(1);
+        return -1;
     }
     ssize_t len = strlen(content);
     if (write(fd, content, len) != len) {
         perror("write map");
         close(fd);
-        _exit(1);
+        return -1;
     }
     close(fd);
+    return 0;
 }
 
 static int setup_userns(void) {
@@ -40,22 +42,30 @@ static int setup_userns(void) {
     char buf[256];
 
     snprintf(buf, sizeof(buf), "0 %d 1\n", uid);
-    write_userns_map("/proc/self/uid_map", buf);
+    if (write_userns_map("/proc/self/uid_map", buf) != 0) {
+        return 0;
+    }
 
     snprintf(buf, sizeof(buf), "deny");
-    write_userns_map("/proc/self/setgroups", buf);
+    if (write_userns_map("/proc/self/setgroups", buf) != 0) {
+        return 0;
+    }
 
     snprintf(buf, sizeof(buf), "0 %d 1\n", gid);
-    write_userns_map("/proc/self/gid_map", buf);
+    if (write_userns_map("/proc/self/gid_map", buf) != 0) {
+        return 0;
+    }
 
     return 0;
 }
 
 static int switch_root(const char *rootfsPath) {
+    char chrootPath[4096];
     char oldRoot[4096];
-    snprintf(oldRoot, sizeof(oldRoot), "%s/rootfs/.pivot_old", rootfsPath);
+    snprintf(chrootPath, sizeof(chrootPath), "%s/rootfs", rootfsPath);
+    snprintf(oldRoot, sizeof(oldRoot), "%s/.pivot_old", chrootPath);
 
-    if (mount(rootfsPath, rootfsPath, "bind", MS_BIND | MS_REC, "") != 0) {
+    if (mount(chrootPath, chrootPath, "bind", MS_BIND | MS_REC, "") != 0) {
         perror("mount bind");
         return -1;
     }
@@ -65,12 +75,12 @@ static int switch_root(const char *rootfsPath) {
         return -1;
     }
 
-    if (chdir(rootfsPath) != 0) {
+    if (chdir(chrootPath) != 0) {
         perror("chdir rootfs");
         return -1;
     }
 
-    if (syscall(SYS_pivot_root, rootfsPath, oldRoot) != 0) {
+    if (syscall(SYS_pivot_root, chrootPath, oldRoot) != 0) {
         perror("pivot_root");
         return -1;
     }
@@ -82,12 +92,10 @@ static int switch_root(const char *rootfsPath) {
 
     if (umount2("/.pivot_old", MNT_DETACH) != 0) {
         perror("umount pivot_old");
-        return -1;
     }
 
     if (rmdir("/.pivot_old") != 0 && errno != ENOENT) {
         perror("rmdir pivot_old");
-        return -1;
     }
 
     return 0;
@@ -185,6 +193,13 @@ static int spawn_shell(const char *rootfsPath) {
     }
 
     if (shell_pid == 0) {
+        if (setsid() < 0) {
+            perror("setsid");
+        }
+        if (ioctl(0, TIOCSCTTY, 1) < 0) {
+            perror("ioctl TIOCSCTTY");
+        }
+
         if (chdir("/tmp") != 0) {
             perror("chdir /tmp");
             _exit(1);
@@ -223,11 +238,6 @@ static int child(void *arg) {
         return 1;
     }
 
-    if (setup_userns() != 0) {
-        fprintf(stderr, "Failed to setup user namespace\n");
-        return 1;
-    }
-
     if (setup_loopback() != 0) {
         fprintf(stderr, "Failed to setup loopback interface\n");
         return 1;
@@ -240,6 +250,25 @@ static int child(void *arg) {
         if (chroot(chrootPath) != 0) {
             perror("chroot fallback");
             return 1;
+        }
+    }
+
+    if (mount("proc", "/proc", "proc", MS_NOSUID | MS_NOEXEC | MS_NODEV, NULL) != 0) {
+        if (errno != EBUSY) {
+            perror("mount /proc");
+        }
+    }
+
+    if (mount("devtmpfs", "/dev", "devtmpfs", MS_NOSUID | MS_NOEXEC, NULL) != 0) {
+        if (errno != EBUSY) {
+            perror("mount /dev (devtmpfs)");
+        }
+    }
+
+    mkdir("/dev/pts", 0755);
+    if (mount("devpts", "/dev/pts", "devpts", MS_NOSUID | MS_NOEXEC, "newinstance,ptmxmode=0666,mode=0620") != 0) {
+        if (errno != EBUSY) {
+            perror("mount /dev/pts");
         }
     }
 
@@ -263,7 +292,7 @@ int main(int argc, char **argv) {
     }
 
     pid_t pid = clone(child, stack + STACK_SIZE,
-                      CLONE_NEWUSER | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | CLONE_NEWIPC | CLONE_NEWCGROUP | SIGCHLD,
+                      CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET | CLONE_NEWIPC | CLONE_NEWCGROUP | SIGCHLD,
                       (void *)argv[1]);
     if (pid == -1) {
         perror("clone");
