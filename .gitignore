@@ -1,3 +1,32 @@
 server/server
 deploy/server
 SERVER_PLAN.md
+# Binaries
+qo
+qo-init
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+test.enc
+test/
+eval-results/
+
+# Build outputs
+deploy/
+
+# Go
+vendor/
+go.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
