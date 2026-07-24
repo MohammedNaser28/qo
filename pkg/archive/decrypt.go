@@ -7,9 +7,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/ahmedYasserM/qo/pkg/logger"
+	"golang.org/x/sys/unix"
 )
 
 func newStreamDecryptReader(r io.Reader, key []byte, nonce []byte) (io.Reader, error) {
@@ -183,6 +185,32 @@ func DecryptTarArchive(encryptedFile, password, utKey string, rootfsPath string)
 			}
 
 			if err := os.Symlink(header.Linkname, dest); err != nil {
+				return err
+			}
+
+		case tar.TypeChar:
+			if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+				return err
+			}
+			dev := int(unix.Mkdev(uint32(header.Devmajor), uint32(header.Devminor)))
+			if err := syscall.Mknod(dest, syscall.S_IFCHR|uint32(header.Mode), dev); err != nil {
+				return err
+			}
+
+		case tar.TypeBlock:
+			if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+				return err
+			}
+			dev := int(unix.Mkdev(uint32(header.Devmajor), uint32(header.Devminor)))
+			if err := syscall.Mknod(dest, syscall.S_IFBLK|uint32(header.Mode), dev); err != nil {
+				return err
+			}
+
+		case tar.TypeFifo:
+			if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+				return err
+			}
+			if err := syscall.Mkfifo(dest, uint32(header.Mode)); err != nil {
 				return err
 			}
 
