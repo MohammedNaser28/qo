@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
@@ -45,6 +46,48 @@ static int setup_userns(void) {
     return 0;
 }
 
+static int switch_root(const char *rootfsPath) {
+    char oldRoot[4096];
+    snprintf(oldRoot, sizeof(oldRoot), "%s/rootfs/.pivot_old", rootfsPath);
+
+    if (mount(rootfsPath, rootfsPath, "bind", MS_BIND | MS_REC, "") != 0) {
+        perror("mount bind");
+        return -1;
+    }
+
+    if (mkdir(oldRoot, 0700) != 0 && errno != EEXIST) {
+        perror("mkdir pivot_old");
+        return -1;
+    }
+
+    if (chdir(rootfsPath) != 0) {
+        perror("chdir rootfs");
+        return -1;
+    }
+
+    if (syscall(SYS_pivot_root, rootfsPath, oldRoot) != 0) {
+        perror("pivot_root");
+        return -1;
+    }
+
+    if (chdir("/") != 0) {
+        perror("chdir /");
+        return -1;
+    }
+
+    if (umount2("/.pivot_old", MNT_DETACH) != 0) {
+        perror("umount pivot_old");
+        return -1;
+    }
+
+    if (rmdir("/.pivot_old") != 0 && errno != ENOENT) {
+        perror("rmdir pivot_old");
+        return -1;
+    }
+
+    return 0;
+}
+
 static int child(void *arg) {
     const char *rootfsPath = (const char *)arg;
 
@@ -58,12 +101,14 @@ static int child(void *arg) {
         return 1;
     }
 
-    char chrootPath[4096];
-    snprintf(chrootPath, sizeof(chrootPath), "%s/rootfs", rootfsPath);
-
-    if (chroot(chrootPath) != 0) {
-        perror("chroot");
-        return 1;
+    if (switch_root(rootfsPath) != 0) {
+        fprintf(stderr, "pivot_root failed, falling back to chroot\n");
+        char chrootPath[4096];
+        snprintf(chrootPath, sizeof(chrootPath), "%s/rootfs", rootfsPath);
+        if (chroot(chrootPath) != 0) {
+            perror("chroot fallback");
+            return 1;
+        }
     }
 
     if (mkdir("/proc", 0555) != 0 && errno != EEXIST) {
