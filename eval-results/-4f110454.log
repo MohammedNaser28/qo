@@ -1,11 +1,0 @@
-bash: cannot set terminal process group (17580): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mtest[0m@qo:[34m~[0m# mkdir file 
-[?2004l[?2004h[32mtest[0m@qo:[34m~[0m# ls
-[?2004lfile
-[?2004h[32mtest[0m@qo:[34m~[0m# [7mtouch file.txt script.sh image.png archive.zip[27m[32mtest[0m@qo:[34m~[0m# touch file.txt script.sh image.png archive.zip
-[?2004l[?2004h[32mtest[0m@qo:[34m~[0m# [Klsi
-[?2004lbash: lsi: command not found
-[?2004h[32mtest[0m@qo:[34m~[0m# &>/de  dev/null
-[?2004lbash: /dev/null: Permission denied
-[?2004h[32mtest[0m@qo:[34m~[0m# 

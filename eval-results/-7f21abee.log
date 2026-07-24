@@ -1,8 +1,0 @@
-bash: cannot set terminal process group (-1): Inappropriate ioctl for device
-bash: no job control in this shell
-[32mtest[0m@qo:[34m~[0m# ps aux
-PID   USER     TIME  COMMAND
-    1 root      0:00 /bin/qo-init init
-    7 root      0:00 /bin/bash --login -i
-   13 root      0:00 ps aux
-[32mtest[0m@qo:[34m~[0m# logout
