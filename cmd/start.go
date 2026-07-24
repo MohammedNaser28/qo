@@ -27,7 +27,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/ahmedYasserM/qo/pkg/archive"
@@ -57,13 +56,8 @@ var startCmd = &cobra.Command{
 		}
 
 		idStr, _ := cmd.Flags().GetString("id")
-		id, err := strconv.ParseUint(idStr, 10, 16)
-		if err != nil {
-			logger.Error(err)
-			os.Exit(1)
-		}
-
-		sessionRootfs, err = sandbox.GenerateSessionPath(fmt.Sprintf("%d", id))
+		var err error
+		sessionRootfs, err = sandbox.GenerateSessionPath(idStr)
 		if err != nil {
 			logger.Error(err)
 			os.Exit(1)
