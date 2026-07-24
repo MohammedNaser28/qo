@@ -10,12 +10,14 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/ahmedYasserM/qo/pkg/logger"
+	"github.com/creack/pty"
 	"golang.org/x/sys/unix"
 )
 
@@ -284,19 +286,27 @@ func StartSandBox(rootfsPath string, duration time.Duration) error {
 		return err
 	}
 
+	master, slave, err := pty.Open()
+	if err != nil {
+		return fmt.Errorf("pty open: %w", err)
+	}
+
 	cmd := exec.Command("/proc/self/exe")
 	cmd.Args = []string{"init", rootfsPath}
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = slave
+	cmd.Stdout = slave
+	cmd.Stderr = slave
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWNET,
 		Setpgid:    true,
 	}
 
 	if err := cmd.Start(); err != nil {
+		slave.Close()
+		master.Close()
 		return fmt.Errorf("start child: %w", err)
 	}
+	slave.Close()
 
 	sessionID := filepath.Base(rootfsPath)
 	if err := setupCgroupV2(sessionID, cmd.Process.Pid); err != nil {
@@ -313,11 +323,38 @@ func StartSandBox(rootfsPath string, duration time.Duration) error {
 		}()
 	}
 
-	if err := cmd.Wait(); err != nil {
-		logger.Warn(fmt.Sprintf("Session exited with error: %v", err))
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGWINCH)
+	go func() {
+		for range sigCh {
+			_ = pty.InheritSize(os.Stdin, master)
+		}
+	}()
+	pty.InheritSize(os.Stdin, master)
+
+	oldState, _ := unix.IoctlGetTermios(int(os.Stdin.Fd()), unix.TCGETS)
+	if oldState != nil {
+		raw := *oldState
+		raw.Iflag &^= unix.IGNBRK | unix.BRKINT | unix.PARMRK | unix.ISTRIP | unix.INLCR | unix.IGNCR | unix.ICRNL | unix.IXON
+		raw.Oflag &^= unix.OPOST
+		raw.Lflag &^= unix.ECHO | unix.ECHONL | unix.ICANON | unix.ISIG | unix.IEXTEN
+		raw.Cflag &^= unix.CSIZE | unix.PARENB
+		raw.Cflag |= unix.CS8
+		raw.Cc[unix.VMIN] = 1
+		raw.Cc[unix.VTIME] = 0
+		_ = unix.IoctlSetTermios(int(os.Stdin.Fd()), unix.TCSETS, &raw)
+		defer unix.IoctlSetTermios(int(os.Stdin.Fd()), unix.TCSETS, oldState)
 	}
+
+	go func() {
+		_, _ = io.Copy(master, os.Stdin)
+	}()
+	_, _ = io.Copy(os.Stdout, master)
+	master.Close()
+
+	cmdErr := cmd.Wait()
 
 	cleanupSession(rootfsPath, sessionID)
 
-	return nil
+	return cmdErr
 }
