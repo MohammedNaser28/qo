@@ -200,8 +200,8 @@ static int spawn_shell(const char *rootfsPath) {
             perror("ioctl TIOCSCTTY");
         }
 
-        if (chdir("/tmp") != 0) {
-            perror("chdir /tmp");
+        if (chdir("/root") != 0) {
+            perror("chdir /root");
             _exit(1);
         }
 
