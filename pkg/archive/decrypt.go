@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ahmedYasserM/qo/pkg/logger"
-	"github.com/ahmedYasserM/qo/pkg/sandbox"
 )
 
 func newStreamDecryptReader(r io.Reader, key []byte, nonce []byte) (io.Reader, error) {
@@ -60,7 +59,7 @@ func checkUnlockTime(ut string) (bool, error) {
 	return now.After(parsedUt) || now.Equal(parsedUt), nil
 }
 
-func DecryptTarArchive(encryptedFile, password, utKey string) error {
+func DecryptTarArchive(encryptedFile, password, utKey string, rootfsPath string) error {
 	file, err := os.Open(encryptedFile)
 	if err != nil {
 		return err
@@ -157,7 +156,7 @@ func DecryptTarArchive(encryptedFile, password, utKey string) error {
 			continue
 		}
 
-		dest := filepath.Join(sandbox.Rootfs, "tmp", header.Name)
+		dest := filepath.Join(rootfsPath, "rootfs", "tmp", header.Name)
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.MkdirAll(dest, os.FileMode(header.Mode)); err != nil {
