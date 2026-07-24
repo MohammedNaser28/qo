@@ -200,6 +200,13 @@ static int spawn_shell(const char *rootfsPath) {
             perror("ioctl TIOCSCTTY");
         }
 
+        const char *student_name = getenv("QO_STUDENT_NAME");
+        if (student_name) {
+            char ps1[256];
+            snprintf(ps1, sizeof(ps1), "root@%s:~# ", student_name);
+            setenv("PS1", ps1, 1);
+        }
+
         if (chdir("/root") != 0) {
             perror("chdir /root");
             _exit(1);
