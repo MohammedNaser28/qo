@@ -1,5 +1,0 @@
-[?2004h[32mdd[0m@qo:[34m~[0m# sleep 1
-[?2004lbash: sleep: command not found
-[?2004h[32mdd[0m@qo:[34m~[0m# {"type":"shutdown","message":"Event is ending. This session will close iin 30 seconds."}
-[?2004lbash: type:shutdown: command not found
-[?2004h[32mdd[0m@qo:[34m~[0m# [K

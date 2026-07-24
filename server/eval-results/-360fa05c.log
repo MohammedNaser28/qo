@@ -1,9 +1,0 @@
-bash: cannot set terminal process group (18245): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mlo[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mlo[0m@qo:[34m~[0m# cat     ls  cat /level2 1/question.txt 
-[?2004lCreate a file called flag.txt in your home directory containing "qo{level1_done}"
-[?2004h[32mlo[0m@qo:[34m~[0m# [Kech  o "{q qo{    qo{levl1  el1_done}" >> flag.txt
-[?2004l[?2004h[32mlo[0m@qo:[34m~[0m# [K/level1/check.sh
-[?2004l/level1/check.sh: line 2: can't create /dev/null: Permission denied
-[?2004h[32mlo[0m@qo:[34m~[0m# 

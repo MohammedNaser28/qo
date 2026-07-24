@@ -1,6 +1,3 @@
-server/server
-deploy/server
-SERVER_PLAN.md
 # Binaries
 qo
 qo-init
@@ -16,6 +13,10 @@ eval-results/
 
 # Build outputs
 deploy/
+
+# Server/frontend (belong to parent repo)
+server/
+frontend/
 
 # Go
 vendor/

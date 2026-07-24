@@ -1,44 +1,0 @@
-bash: cannot set terminal process group (16173): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mvv[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mvv[0m@qo:[34m~[0m# ls /
-[?2004lbin
-dev
-etc
-home
-level1
-level2
-level3
-lib
-lib64
-mnt
-proc
-root
-sys
-tmp
-usr
-var
-[?2004h[32mvv[0m@qo:[34m~[0m# ls /level1
-[?2004lcheck.sh
-meta.yaml
-question.txt
-[?2004h[32mvv[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mvv[0m@qo:[34m~[0m# ca  t qie  qi  uesstion.txt
-[?2004lcat: can't open 'quesstion.txt': No such file or directory
-[?2004h[32mvv[0m@qo:[34m~[0m# cat quesstion.txt [1@/[1@l[1@e[1@v[1@e[1@l[1@1[1@/
-[?2004lcat: can't open '/level1/quesstion.txt': No such file or directory
-[?2004h[32mvv[0m@qo:[34m~[0m# [Kcat /level1/quesstion.txt[1P
-[?2004lCreate a file called flag.txt in your home directory containing "qo{level1_done}"
-[?2004h[32mvv[0m@qo:[34m~[0m# [K
-[?2004l[?2004h[32mvv[0m@qo:[34m~[0m# mki dir       echo "qo( {level1_dne  one) }: " >> file   lag.txt
-[?2004l[?2004h[32mvv[0m@qo:[34m~[0m# [K./  /levl el1/q cjec   hceck    eck.sh
-[?2004l/level1/check.sh: line 2: can't create /dev/null: Permission denied
-[?2004h[32mvv[0m@qo:[34m~[0m# ls
-[?2004lflag.txt
-[?2004h[32mvv[0m@qo:[34m~[0m# ls
-[?2004lflag.txt
-[?2004h[32mvv[0m@qo:[34m~[0m# ls
-[?2004lflag.txt
-[?2004h[32mvv[0m@qo:[34m~[0m# check     ls/level1/check.shecho "qo{level1_done}" >> flag.txt[32mvv[0m@qo:[34m~[0m# [18P/level1/check.sh
-[?2004l/level1/check.sh: line 2: can't create /dev/null: Permission denied
-[?2004h[32mvv[0m@qo:[34m~[0m# 

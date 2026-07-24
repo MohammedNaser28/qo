@@ -1,6 +1,0 @@
-[?2004h[32mr[0m@qo:[34m~[0m# ls  ls
-[?2004l[?2004h[32mr[0m@qo:[34m~[0m# kill
-[?2004lkill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]
-[?2004h[32mr[0m@qo:[34m~[0m# sleep 1
-[?2004lbash: sleep: command not found
-[?2004h[32mr[0m@qo:[34m~[0m# 

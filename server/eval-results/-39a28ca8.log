@@ -1,13 +1,0 @@
-bash: cannot set terminal process group (11601): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mqq[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mqq[0m@qo:[34m~[0m# sleep 1
-[?2004l[?2004h[32mqq[0m@qo:[34m~[0m# echo 22 &2>dev/null
-[?2004l[1] 11709
-bash: dev/null: No such file or directory
-[?2004h[32mqq[0m@qo:[34m~[0m# [Kbash: cannot redirect standard input from /dev/null: Permission denied
-22
-
-[?2004l[?2004h[32mqq[0m@qo:[34m~[0m# &>de  /dev/null
-[?2004lbash: /dev/null: Permission denied
-[?2004h[32mqq[0m@qo:[34m~[0m# 

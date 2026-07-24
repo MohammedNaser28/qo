@@ -1,8 +1,0 @@
-bash: cannot set terminal process group (-1): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mvv[0m@qo:[34m~[0m# mkdir file
-[?2004l[?2004h[32mvv[0m@qo:[34m~[0m# ls
-[?2004lfile
-[?2004h[32mvv[0m@qo:[34m~[0m# lsi
-[?2004l  [1;34mfile/[0m
-[?2004h[32mvv[0m@qo:[34m~[0m# 

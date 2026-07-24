@@ -1,10 +1,0 @@
-bash: cannot set terminal process group (47702): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mgg[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# sleep 1
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# sleep 1[K^M[K[7msudo EVENT_CODE=qo2026 ADMIN_SECRET=admin123 QO_BINARY_PATH=/tmp/qo ARC[27m[7mH[27m[7mHIVE_PATH=/tmp/qo-test/demo.enc ARCHIVE_PASSWORD=password ARCHIVE_KEY=key QO_DUR[27m[7mA[27m[7mATION=90m /tmp/qo-test/server[27m[A[Asudo EVENT_CODE=qo2026 ADMIN_SECRET=admin123 QO_BINARY_PATH=/tmp/qo ARCHIVE_PATH=/tmp/qo-test/demo.enc ARCHIVE_PASSWORD=password ARCHIVE_KEY=key QO_DURA[1PTION=90m /tmp/qo-test/serve
-[?2004lbash: sudo: command not found
-[?2004h[32mgg[0m@qo:[34m~[0m# [K^V[K^[[200~echo test &>/dev/null; echo $?~  [1P[1P[1P[1P[1P[2P
-[?2004lbash: /dev/null: Permission denied
-$
-[?2004h[32mgg[0m@qo:[34m~[0m# [K

@@ -1,5 +1,0 @@
-bash: cannot set terminal process group (12160): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mqo34[0m@qo:[34m~[0m# {"type":"shutdown","message":"Event is ending. This session will closee in 30 seconds."}
-[?2004lbash: type:shutdown: command not found
-[?2004h[32mqo34[0m@qo:[34m~[0m# [K

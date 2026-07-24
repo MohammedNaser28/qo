@@ -1,8 +1,0 @@
-[?2004h[32mrr[0m@qo:[34m~[0m# sleep
-[?2004lbash: sleep: command not found
-[?2004h[32mrr[0m@qo:[34m~[0m# sleep 1
-[?2004lbash: sleep: command not found
-[?2004h[32mrr[0m@qo:[34m~[0m# kill 0 -0 $$
-[?2004l[?2004h[32mrr[0m@qo:[34m~[0m# [7mecho test &>/dev/null; echo $?[27m[32mrr[0m@qo:[34m~[0m# echo test &>/dev/null; echo $?
-[?2004l0
-[?2004h[32mrr[0m@qo:[34m~[0m# [K

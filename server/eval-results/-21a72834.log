@@ -1,27 +1,0 @@
-bash: cannot set terminal process group (11897): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mmo[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mmo[0m@qo:[34m~[0m# mkdir files
-[?2004l[?2004h[32mmo[0m@qo:[34m~[0m# ls
-[?2004lfiles
-[?2004h[32mmo[0m@qo:[34m~[0m# cd files
-[?2004l[?2004h[32mmo[0m@qo:[34m~/files[0m# ls
-[?2004l[?2004h[32mmo[0m@qo:[34m~/files[0m# touc  h il  file
-[?2004l[?2004h[32mmo[0m@qo:[34m~/files[0m# cd file
-[?2004lbash: cd: file: Not a directory
-[?2004h[32mmo[0m@qo:[34m~/files[0m# ls
-[?2004lfile
-[?2004h[32mmo[0m@qo:[34m~/files[0m# n vim file
-[?2004lVim: Warning: Output is not to a terminal
-[?25l[JE1187: Failed to source defaults.vim[?25h
-Press ENTER or type command to continue[?1049h[22;0;0t[>4;2m[?1h=[?2004h[1;24r[?12h[?12l[22;2t[22;1t[27m[23m[29m[m[H[2J[?25l[24;1H"file" 0 lines, 0 bytes[2;1H[94m~                                                                               [3;1H~                                                                               [4;1H~                                                                               [5;1H~                                                                               [6;1H~                                                                               [7;1H~                                                                               [8;1H~                                                                               [9;1H~                                                                               [10;1H~                                                                               [11;1H~                                                                               [12;1H~                                                                               [13;1H~                                                                               [14;1H~                                                                               [15;1H~                                                                               [16;1H~                                                                               [17;1H~                                                                               [18;1H~                                                                               [19;1H~                                                                               [20;1H~                                                                               [21;1H~                                                                               [22;1H~                                                                               [23;1H~                                                                               [1;1H[?25h[?4m[?2004l[>4;m[?25l[mj[?25h[?25lk[?25h[?25lj[?25h[?25lf[?25h[?25lk[?25h[?25ld[?25h[?25lf[?25h[?25lj[?25h[?25lk[?25h[?2004h[>4;2m[?4m[?25l[24;1H[K[24;1H:[?25hwq [?25l[?2004l[>4;m"file" 1 line, 10 bytes written[23;2t[23;1t[?2004l[?1l>[?1049l[23;0;0t[?25h[>4;m
-[?2004h[32mmo[0m@qo:[34m~/files[0m# cat fil
-[?2004lcat: can't open 'fil': No such file or directory
-[?2004h[32mmo[0m@qo:[34m~/files[0m# cat file
-[?2004ljkjfkdfjk
-[?2004h[32mmo[0m@qo:[34m~/files[0m# clear
-[?2004l[H[J[?2004h[32mmo[0m@qo:[34m~/files[0m# ls
-[?2004lfile
-[?2004h[32mmo[0m@qo:[34m~/files[0m# {"type":"shutdown","message":"Event is ending. This session will cclose in 30 seconds."}
-[?2004lbash: type:shutdown: command not found
-[?2004h[32mmo[0m@qo:[34m~/files[0m# [K

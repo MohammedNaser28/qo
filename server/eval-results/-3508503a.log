@@ -1,12 +1,0 @@
-bash: cannot set terminal process group (44999): Inappropriate ioctl for device
-bash: no job control in this shell
-mount: permission denied (are you root?)
-mount: permission denied (are you root?)
-mount: permission denied (are you root?)
-mount: permission denied (are you root?)
-mount: permission denied (are you root?)
-[?2004h[32mll[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mll[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mll[0m@qo:[34m~[0m# sleep 1
-[?2004l[?2004h[32mll[0m@qo:[34m~[0m# sleep 4
-[?2004l[?2004h[32mll[0m@qo:[34m~[0m# 

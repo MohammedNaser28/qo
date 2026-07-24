@@ -1,15 +1,0 @@
-bash: cannot set terminal process group (-1): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mss[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mss[0m@qo:[34m~[0m# &>/dev/null
-[?2004l[?2004h[32mss[0m@qo:[34m~[0m# mkdr file
-[?2004lbash: mkdr: command not found
-[?2004h[32mss[0m@qo:[34m~[0m# l mkdir file
-[?2004l[?2004h[32mss[0m@qo:[34m~[0m# l
-[?2004lbash: l: command not found
-[?2004h[32mss[0m@qo:[34m~[0m# s ls
-[?2004lfile
-[?2004h[32mss[0m@qo:[34m~[0m# lc  clear
-[?2004l[H[J[?2004h[32mss[0m@qo:[34m~[0m# {"type":"shutdown","message":"Session closed due to inactivity"}
-[?2004lbash: type:shutdown: command not found
-[?2004h[32mss[0m@qo:[34m~[0m# [K

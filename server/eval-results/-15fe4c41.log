@@ -1,8 +1,0 @@
-[?2004h[32mgg[0m@qo:[34m~[0m# echo >> "{qo_   q  qp o{level1}" "[1@_[1@d[1@o[1@n[1@e}".txt
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# [Kecho >> "qo{level1_done}".txt     >>[1P[1P "qo{level1_done}" >> level1      flag.txt
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# [K/elve    level/checl      1/cec  ec  hek ck.sh 
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# /level1/check.sh echo  "qo{level1_done}" >> flag.txt [1@/[1@h[1@o[1@m[1@e[1@/
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# [Kks /home        echo  "qo{level1_done}" >> /home/flag.txt[32mgg[0m@qo:[34m~[0m# [24P/level1/check.sh echo  "qo{level1_done}" >> flag.txt[32mgg[0m@qo:[34m~[0m# [18P/level1/check.sh 
-[?2004l[?2004h[32mgg[0m@qo:[34m~[0m# {"type":"shutdown","message":"Session closed due to inactivity"}
-[?2004lbash: type:shutdown: command not found
-[?2004h[32mgg[0m@qo:[34m~[0m# [K

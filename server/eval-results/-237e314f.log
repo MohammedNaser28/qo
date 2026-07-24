@@ -1,6 +1,0 @@
-bash: cannot set terminal process group (9983): Inappropriate ioctl for device
-bash: no job control in this shell
-[?2004h[32mnmo[0m@qo:[34m~[0m# ls
-[?2004l[?2004h[32mnmo[0m@qo:[34m~[0m# mkdir file
-[?2004lmkdir: can't create directory 'file': Permission denied
-[?2004h[32mnmo[0m@qo:[34m~[0m# 
