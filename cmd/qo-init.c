@@ -11,6 +11,8 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 
 #define STACK_SIZE (1024 * 1024)
 
@@ -88,6 +90,66 @@ static int switch_root(const char *rootfsPath) {
     return 0;
 }
 
+static int setup_loopback(void) {
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        perror("socket");
+        return -1;
+    }
+
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, "lo", IFNAMSIZ - 1);
+    ifr.ifr_flags = IFF_UP | IFF_LOOPBACK | IFF_RUNNING;
+
+    if (ioctl(sock, SIOCSIFFLAGS, &ifr) != 0) {
+        perror("ioctl SIOCSIFFLAGS");
+        close(sock);
+        return -1;
+    }
+
+    close(sock);
+    return 0;
+}
+
+static int spawn_shell(const char *rootfsPath) {
+    pid_t shell_pid = fork();
+    if (shell_pid < 0) {
+        perror("fork");
+        return -1;
+    }
+
+    if (shell_pid == 0) {
+        if (chdir("/tmp") != 0) {
+            perror("chdir /tmp");
+            _exit(1);
+        }
+
+        execl("/bin/bash", "/bin/bash", "-i", NULL);
+        perror("execl");
+        _exit(1);
+    }
+
+    int status = 0;
+    pid_t pid;
+    while ((pid = waitpid(-1, &status, 0)) > 0) {
+        if (pid == shell_pid) {
+            if (WIFEXITED(status)) {
+                return WEXITSTATUS(status);
+            } else if (WIFSIGNALED(status)) {
+                return 128 + WTERMSIG(status);
+            }
+            return 1;
+        }
+    }
+
+    if (pid < 0 && errno == ECHILD) {
+        return 1;
+    }
+
+    return 1;
+}
+
 static int child(void *arg) {
     const char *rootfsPath = (const char *)arg;
 
@@ -101,6 +163,11 @@ static int child(void *arg) {
         return 1;
     }
 
+    if (setup_loopback() != 0) {
+        fprintf(stderr, "Failed to setup loopback interface\n");
+        return 1;
+    }
+
     if (switch_root(rootfsPath) != 0) {
         fprintf(stderr, "pivot_root failed, falling back to chroot\n");
         char chrootPath[4096];
@@ -111,40 +178,7 @@ static int child(void *arg) {
         }
     }
 
-    if (mkdir("/proc", 0555) != 0 && errno != EEXIST) {
-        perror("mkdir /proc");
-        return 1;
-    }
-
-    if (mount("proc", "/proc", "proc", 0, "") != 0) {
-        perror("mount proc");
-        return 1;
-    }
-
-    if (mkdir("/dev/pts", 0755) != 0 && errno != EEXIST) {
-        perror("mkdir /dev/pts");
-        return 1;
-    }
-
-    if (mount("devpts", "/dev/pts", "devpts", 0, "newinstance,ptmxmode=0666,mode=0620") != 0) {
-        perror("mount devpts");
-        return 1;
-    }
-
-    unlink("/dev/ptmx");
-    if (symlink("pts/ptmx", "/dev/ptmx") != 0) {
-        perror("symlink /dev/ptmx");
-        return 1;
-    }
-
-    if (chdir("/tmp") != 0) {
-        perror("chdir /tmp");
-        return 1;
-    }
-
-    execl("/bin/bash", "/bin/bash", "-i", NULL);
-    perror("execl");
-    return 1;
+    return spawn_shell(rootfsPath);
 }
 
 int main(int argc, char **argv) {
