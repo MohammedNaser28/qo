@@ -38,7 +38,6 @@ import (
 
 var (
 	idStr         string
-	id            uint64
 	archivePath   string
 	utKeyStart    string
 	passwordStart string
@@ -57,6 +56,19 @@ var startCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		idStr, _ := cmd.Flags().GetString("id")
+		id, err := strconv.ParseUint(idStr, 10, 16)
+		if err != nil {
+			logger.Error(err)
+			os.Exit(1)
+		}
+
+		sessionRootfs, err = sandbox.GenerateSessionPath(fmt.Sprintf("%d", id))
+		if err != nil {
+			logger.Error(err)
+			os.Exit(1)
+		}
+
 		if err := sandbox.ExtractRootfs(sessionRootfs); err != nil {
 			return err
 		}
@@ -67,7 +79,7 @@ var startCmd = &cobra.Command{
 
 		logger.Success(fmt.Sprintf("%s folder is unpacked and decrypted successfully.", archivePath))
 
-		err := sandbox.StartSandBox(sessionRootfs, testDuration)
+		err = sandbox.StartSandBox(sessionRootfs, testDuration)
 
 		return err
 	},
@@ -92,19 +104,4 @@ func init() {
 
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
-
-	// This is done to enable user to input id like `093` and parse it as decimal not octal
-	var err error
-	id, err = strconv.ParseUint(idStr, 10, 16)
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
-
-	// Generate session rootfs path for the child process
-	sessionRootfs, err = sandbox.GenerateSessionPath(fmt.Sprintf("%d", id))
-	if err != nil {
-		logger.Error(err)
-		os.Exit(1)
-	}
 }
