@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "=== Building experimental qo-init C helper ==="
-gcc -O2 -o "$ROOT/qo-init" "$ROOT/cmd/qo-init.c"
+gcc -O2 -lseccomp -o "$ROOT/qo-init" "$ROOT/cmd/qo-init.c"
 
 echo "=== Building qo binary (experimental branch) ==="
 CGO_ENABLED=0 go build -o "$ROOT/qo" .
