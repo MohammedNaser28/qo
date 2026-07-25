@@ -274,6 +274,11 @@ func StartSandBox(rootfsPath string, duration time.Duration) error {
 		return helperErr
 	}
 
+	logoPath := filepath.Join(rootfsPath, "rootfs", "tmp", ".qo-logo")
+	if err := os.MkdirAll(filepath.Dir(logoPath), 0755); err == nil {
+		os.WriteFile(logoPath, []byte(logoContent), 0644)
+	}
+
 	cmd := exec.Command(helperPath, rootfsPath)
 	cmd.Stdin = slave
 	cmd.Stdout = slave

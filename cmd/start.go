@@ -57,13 +57,14 @@ var startCmd = &cobra.Command{
 
 		idStr, _ := cmd.Flags().GetString("id")
 		var err error
-		sessionRootfs, err = sandbox.GenerateSessionPath(idStr)
-		if err != nil {
-			logger.Error(err)
-			os.Exit(1)
+		sessionRootfs = os.Getenv("QO_SESSION_PATH")
+		if sessionRootfs == "" {
+			sessionRootfs, err = sandbox.GenerateSessionPath(idStr)
+			if err != nil {
+				logger.Error(err)
+				os.Exit(1)
+			}
 		}
-
-		fmt.Println("QO_SESSION_ROOTFS=" + sessionRootfs)
 
 		if err := sandbox.ExtractRootfs(sessionRootfs); err != nil {
 			return err
@@ -75,7 +76,9 @@ var startCmd = &cobra.Command{
 
 		logger.Success(fmt.Sprintf("%s folder is unpacked and decrypted successfully.", archivePath))
 
-		go sandbox.StartChallengeHandler(sessionRootfs)
+		if os.Getenv("QO_STUDENT_NAME") == "" {
+			go sandbox.StartChallengeHandler(sessionRootfs)
+		}
 
 		err = sandbox.StartSandBox(sessionRootfs, testDuration)
 
