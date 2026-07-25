@@ -14,6 +14,8 @@ package cmd
 // qo meta -a ./test.enc -p foo -k bar
 
 import (
+	"fmt"
+
 	"github.com/ahmedYasserM/qo/pkg/archive"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +35,7 @@ var metaCmd = &cobra.Command{
 			return err
 		}
 
-		cmd.Println(string(data))
+		fmt.Println(string(data))
 		return nil
 	},
 }

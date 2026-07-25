@@ -7,16 +7,27 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/ahmedYasserM/qo/pkg/logger"
 	"gopkg.in/yaml.v3"
 )
 
+type ChallengeLevel struct {
+	ID       int    `yaml:"id" json:"id"`
+	Title    string `yaml:"title" json:"title"`
+	Question string `yaml:"question" json:"question"`
+	Hint     string `yaml:"hint,omitempty" json:"hint,omitempty"`
+}
+
 type ChallengeMetadata struct {
-	Title      string `yaml:"title" json:"title"`
-	Difficulty string `yaml:"difficulty" json:"difficulty"`
-	Question   string `yaml:"question" json:"question"`
+	Title       string            `yaml:"title,omitempty" json:"title,omitempty"`
+	Difficulty  string            `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
+	Story       string            `yaml:"story,omitempty" json:"story,omitempty"`
+	Question    string            `yaml:"question,omitempty" json:"question,omitempty"`
+	Levels      []ChallengeLevel  `yaml:"levels,omitempty" json:"levels,omitempty"`
+	DefaultHint string            `yaml:"default_hint,omitempty" json:"default_hint,omitempty"`
 }
 
 func DecryptMetadata(encryptedFile, password string) (*ChallengeMetadata, error) {
@@ -59,11 +70,74 @@ func DecryptMetadata(encryptedFile, password string) (*ChallengeMetadata, error)
 			if err := yaml.NewDecoder(tr).Decode(&meta); err != nil {
 				return nil, fmt.Errorf("parse meta.yaml: %w", err)
 			}
+			normalizeMeta(&meta)
 			return &meta, nil
 		}
 	}
 
 	return nil, fmt.Errorf("meta.yaml not found in archive")
+}
+
+func normalizeMeta(meta *ChallengeMetadata) {
+	if len(meta.Levels) == 0 && meta.Question != "" {
+		meta.Levels = []ChallengeLevel{{
+			ID:       1,
+			Title:    meta.Title,
+			Question: meta.Question,
+			Hint:     meta.DefaultHint,
+		}}
+	}
+	for i := range meta.Levels {
+		if meta.Levels[i].ID == 0 {
+			meta.Levels[i].ID = i + 1
+		}
+		if meta.Levels[i].Question == "" {
+			meta.Levels[i].Question = meta.Question
+		}
+		if meta.Levels[i].Hint == "" && meta.DefaultHint != "" {
+			meta.Levels[i].Hint = meta.DefaultHint
+		}
+	}
+}
+
+func DiscoverLevelsFromRootfs(rootfsPath string) ([]ChallengeLevel, error) {
+	tmpDir := filepath.Join(rootfsPath, "rootfs", "tmp")
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var levels []ChallengeLevel
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		var id int
+		if _, err := fmt.Sscanf(name, "level%d", &id); err != nil || id <= 0 {
+			continue
+		}
+
+		level := ChallengeLevel{ID: id, Title: name}
+
+		qPath := filepath.Join(tmpDir, name, "question.txt")
+		if data, err := os.ReadFile(qPath); err == nil {
+			level.Question = string(data)
+		}
+
+		hPath := filepath.Join(tmpDir, name, "hint.txt")
+		if data, err := os.ReadFile(hPath); err == nil {
+			level.Hint = string(data)
+		}
+
+		levels = append(levels, level)
+	}
+
+	if len(levels) == 0 {
+		return nil, fmt.Errorf("no level directories found in %s", tmpDir)
+	}
+
+	return levels, nil
 }
 
 func isMetaFile(name string) bool {

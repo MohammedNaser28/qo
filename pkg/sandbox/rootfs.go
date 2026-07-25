@@ -37,6 +37,20 @@ func GenerateSessionPath(studentID string) (string, error) {
 
 const maxConcurrentSessions = 8
 
+func countSessionDirs() int {
+	entries, err := os.ReadDir(sessionsDir)
+	if err != nil {
+		return 0
+	}
+	count := 0
+	for _, e := range entries {
+		if e.IsDir() {
+			count++
+		}
+	}
+	return count
+}
+
 func checkConcurrencyCap() error {
 	lockFile := filepath.Join("/tmp", "qo-sessions.lock")
 	file, err := os.OpenFile(lockFile, os.O_RDWR|os.O_CREATE, 0644)
@@ -49,26 +63,9 @@ func checkConcurrencyCap() error {
 		return fmt.Errorf("concurrent sessions limit reached")
 	}
 
-	countBytes, err := os.ReadFile(lockFile)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to read session count: %w", err)
-	}
-
-	count := 0
-	if len(countBytes) > 0 {
-		count, err = strconv.Atoi(string(countBytes))
-		if err != nil {
-			return fmt.Errorf("invalid session count in lock file: %w", err)
-		}
-	}
-
-	if count >= maxConcurrentSessions {
-		return fmt.Errorf("concurrent sessions limit reached")
-	}
-
-	count++
-	if err := os.WriteFile(lockFile, []byte(strconv.Itoa(count)), 0644); err != nil {
-		return fmt.Errorf("failed to write session count: %w", err)
+	active := countSessionDirs()
+	if active >= maxConcurrentSessions {
+		return fmt.Errorf("concurrent sessions limit reached (%d/%d)", active, maxConcurrentSessions)
 	}
 
 	return nil
@@ -76,29 +73,8 @@ func checkConcurrencyCap() error {
 
 func releaseConcurrencyCap() {
 	lockFile := filepath.Join("/tmp", "qo-sessions.lock")
-	file, err := os.OpenFile(lockFile, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		logger.Warn(fmt.Sprintf("Failed to open concurrency lock for release: %v", err))
-		return
-	}
-	defer file.Close()
-
-	syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
-
-	countBytes, err := os.ReadFile(lockFile)
-	if err == nil && len(countBytes) > 0 {
-		sessionCount, err := strconv.Atoi(string(countBytes))
-		if err == nil && sessionCount > 0 {
-			sessionCount--
-			if err := os.WriteFile(lockFile, []byte(strconv.Itoa(sessionCount)), 0644); err != nil {
-				logger.Warn(fmt.Sprintf("Failed to decrement session count: %v", err))
-			}
-		}
-	}
-
-	sessionCount, _ := strconv.Atoi(string(countBytes))
-	if sessionCount <= 0 {
-		os.Remove(lockFile)
+	if err := os.Remove(lockFile); err != nil && !os.IsNotExist(err) {
+		logger.Warn(fmt.Sprintf("Failed to remove concurrency lock: %v", err))
 	}
 }
 
@@ -237,7 +213,7 @@ func ExtractRootfs(rootfsPath string) error {
 		}
 	}
 
-	missingApplets := []string{"sleep", "kill", "pkill", "killall", "stat", "passwd", "chpasswd", "adduser", "addgroup", "deluser", "delgroup"}
+	missingApplets := []string{"sleep", "kill", "pkill", "killall", "stat", "passwd", "chpasswd", "adduser", "addgroup", "deluser", "delgroup", "wc", "head", "tail", "tr", "cut", "more", "strings", "diff"}
 	binDir := filepath.Join(rootfsPath, "rootfs", "bin")
 	for _, applet := range missingApplets {
 		target := filepath.Join(binDir, applet)
@@ -261,11 +237,22 @@ func findHelper() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	candidate := filepath.Join(filepath.Dir(binaryPath), "qo-init")
-	if _, err := os.Stat(candidate); err == nil {
-		return candidate, nil
+
+	candidates := []string{
+		filepath.Join(filepath.Dir(binaryPath), "qo-init"),
+		"/home/mohammed-niri/projects/qo-learn-tool/qo/qo-init",
+		filepath.Join("/home/mohammed-niri/projects/qo-learn-tool", "qo", "qo-init"),
+		"/usr/local/bin/qo-init",
 	}
-	return "", fmt.Errorf("qo-init helper not found beside %s", binaryPath)
+
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	wd, _ := os.Getwd()
+	return "", fmt.Errorf("qo-init helper not found beside %s or in %s", binaryPath, wd)
 }
 
 func StartSandBox(rootfsPath string, duration time.Duration) error {

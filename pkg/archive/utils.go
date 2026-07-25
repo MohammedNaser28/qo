@@ -20,19 +20,23 @@ func IsValidFolderStructure(root string) error {
 		return err
 	}
 
-	// Check for files in root
+	allowedRootFiles := map[string]bool{"meta.yaml": true}
 	for _, entry := range entries {
-		if !entry.IsDir() {
-			return fmt.Errorf("File %q found in root directory; only subdirectories are allowed", entry.Name())
+		if entry.IsDir() {
+			continue
+		}
+		if !allowedRootFiles[entry.Name()] {
+			return fmt.Errorf("File %q found in root directory; only subdirectories and meta.yaml are allowed", entry.Name())
 		}
 	}
 
-	// Check each subdirectory
 	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
 		subDirPath := filepath.Join(root, entry.Name())
 		checkFilePath := filepath.Join(subDirPath, "check.sh")
 
-		// Ensure check.sh exists
 		info, err := os.Stat(checkFilePath)
 		if os.IsNotExist(err) {
 			return fmt.Errorf("%q is missing 'check.sh'", subDirPath)

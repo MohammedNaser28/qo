@@ -63,6 +63,8 @@ var startCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		fmt.Println("QO_SESSION_ROOTFS=" + sessionRootfs)
+
 		if err := sandbox.ExtractRootfs(sessionRootfs); err != nil {
 			return err
 		}
@@ -72,6 +74,8 @@ var startCmd = &cobra.Command{
 		}
 
 		logger.Success(fmt.Sprintf("%s folder is unpacked and decrypted successfully.", archivePath))
+
+		go sandbox.StartChallengeHandler(sessionRootfs)
 
 		err = sandbox.StartSandBox(sessionRootfs, testDuration)
 
