@@ -76,10 +76,6 @@ var startCmd = &cobra.Command{
 
 		logger.Success(fmt.Sprintf("%s folder is unpacked and decrypted successfully.", archivePath))
 
-		if os.Getenv("QO_STUDENT_NAME") == "" {
-			go sandbox.StartChallengeHandler(sessionRootfs)
-		}
-
 		err = sandbox.StartSandBox(sessionRootfs, testDuration)
 
 		return err
