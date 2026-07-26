@@ -14,11 +14,32 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type ValidatorType string
+
+const (
+	ValidatorFlag           ValidatorType = "flag"
+	ValidatorProcessDead    ValidatorType = "process_dead"
+	ValidatorProcessRunning ValidatorType = "process_running"
+	ValidatorFileExists     ValidatorType = "file_exists"
+	ValidatorFileNotExists  ValidatorType = "file_not_exists"
+	ValidatorFileContains   ValidatorType = "file_contains"
+	ValidatorFilePerms      ValidatorType = "file_permissions"
+)
+
+type Validator struct {
+	Type  ValidatorType `yaml:"type" json:"type"`
+	Value string        `yaml:"value,omitempty" json:"value,omitempty"`
+	Path  string        `yaml:"path,omitempty" json:"path,omitempty"`
+	Name  string        `yaml:"name,omitempty" json:"name,omitempty"`
+	Mode  string        `yaml:"mode,omitempty" json:"mode,omitempty"`
+}
+
 type ChallengeLevel struct {
-	ID       int    `yaml:"id" json:"id"`
-	Title    string `yaml:"title" json:"title"`
-	Question string `yaml:"question" json:"question"`
-	Hint     string `yaml:"hint,omitempty" json:"hint,omitempty"`
+	ID        int        `yaml:"id" json:"id"`
+	Title     string     `yaml:"title" json:"title"`
+	Question  string     `yaml:"question" json:"question"`
+	Hint      string     `yaml:"hint,omitempty" json:"hint,omitempty"`
+	Validator *Validator `yaml:"validator,omitempty" json:"validator,omitempty"`
 }
 
 type ChallengeMetadata struct {
