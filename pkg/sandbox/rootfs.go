@@ -240,8 +240,6 @@ func findHelper() (string, error) {
 
 	candidates := []string{
 		filepath.Join(filepath.Dir(binaryPath), "qo-init"),
-		"/home/mohammed-niri/projects/qo-learn-tool/qo/qo-init",
-		filepath.Join("/home/mohammed-niri/projects/qo-learn-tool", "qo", "qo-init"),
 		"/usr/local/bin/qo-init",
 	}
 
@@ -251,8 +249,7 @@ func findHelper() (string, error) {
 		}
 	}
 
-	wd, _ := os.Getwd()
-	return "", fmt.Errorf("qo-init helper not found beside %s or in %s", binaryPath, wd)
+	return "", fmt.Errorf("qo-init helper not found beside %s or in /usr/local/bin/qo-init", binaryPath)
 }
 
 func StartSandBox(rootfsPath string, duration time.Duration) error {

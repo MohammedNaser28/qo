@@ -119,7 +119,7 @@ func CreateEncryptedTarArchive(sourceDir, outputFile, unlockDate, password, key 
 		}
 
 		// Update the header name to maintain the directory structure
-		relPath, err := filepath.Rel(filepath.Dir(sourceDir), path)
+		relPath, err := filepath.Rel(sourceDir, path)
 		if err != nil {
 			return err
 		}
