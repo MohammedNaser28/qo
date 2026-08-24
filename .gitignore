@@ -32,3 +32,4 @@ go.sum
 .DS_Store
 Thumbs.db
 qo-init_bak
+qo-check
