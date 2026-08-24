@@ -136,7 +136,13 @@ func DiscoverLevelsFromRootfs(rootfsPath string) ([]ChallengeLevel, error) {
 		name := e.Name()
 		var id int
 		if _, err := fmt.Sscanf(name, "level%d", &id); err != nil || id <= 0 {
-			continue
+			if _, err := fmt.Sscanf(name, "Level-%d", &id); err != nil || id <= 0 {
+				if _, err := fmt.Sscanf(name, "Level%d", &id); err != nil || id <= 0 {
+					if _, err := fmt.Sscanf(name, "level-%d", &id); err != nil || id <= 0 {
+						continue
+					}
+				}
+			}
 		}
 
 		level := ChallengeLevel{ID: id, Title: name}
