@@ -24,6 +24,15 @@ import (
 //go:embed rootfs.tar.gz
 var embeddedRootfs []byte
 
+const target = "/tmp"
+const sentinel = "\x00__QO_EOF__\x00"
+
+var (
+	Rootfs        string
+	ChallengesDir string
+	PristineDir   string
+)
+
 const sessionsDir = "/tmp/qo-sessions"
 const defaultUser string = "ahmed"
 
@@ -33,49 +42,6 @@ func GenerateSessionPath(studentID string) (string, error) {
 	sessionID := fmt.Sprintf("%s-%s", studentID, suffix)
 	sessionPath := filepath.Join(sessionsDir, sessionID)
 	return sessionPath, nil
-}
-
-const maxConcurrentSessions = 8
-
-func countSessionDirs() int {
-	entries, err := os.ReadDir(sessionsDir)
-	if err != nil {
-		return 0
-	}
-	count := 0
-	for _, e := range entries {
-		if e.IsDir() {
-			count++
-		}
-	}
-	return count
-}
-
-func checkConcurrencyCap() error {
-	lockFile := filepath.Join("/tmp", "qo-sessions.lock")
-	file, err := os.OpenFile(lockFile, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to open concurrency lock: %w", err)
-	}
-	defer file.Close()
-
-	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		return fmt.Errorf("concurrent sessions limit reached")
-	}
-
-	active := countSessionDirs()
-	if active >= maxConcurrentSessions {
-		return fmt.Errorf("concurrent sessions limit reached (%d/%d)", active, maxConcurrentSessions)
-	}
-
-	return nil
-}
-
-func releaseConcurrencyCap() {
-	lockFile := filepath.Join("/tmp", "qo-sessions.lock")
-	if err := os.Remove(lockFile); err != nil && !os.IsNotExist(err) {
-		logger.Warn(fmt.Sprintf("Failed to remove concurrency lock: %v", err))
-	}
 }
 
 func setupCgroupV2(sessionID string, pid int) error {
@@ -145,6 +111,10 @@ func pathExists(path string) bool {
 
 // ExtractRootfs extracts the tar-archived rootfs folder in /tmp
 func ExtractRootfs(rootfsPath string) error {
+	Rootfs = rootfsPath
+	ChallengesDir = filepath.Join(target, "rootfs_challenges")
+	PristineDir = filepath.Join(target, "rootfs_pristine")
+
 	if pathExists(rootfsPath) {
 		rootfsContent := filepath.Join(rootfsPath, "rootfs")
 		_ = syscall.Unmount(filepath.Join(rootfsContent, "dev", "pts"), syscall.MNT_FORCE)
@@ -222,6 +192,10 @@ func ExtractRootfs(rootfsPath string) error {
 		}
 	}
 
+	// Mail spool — useradd complains ("Creating mailbox file") when missing.
+	_ = os.MkdirAll(filepath.Join(rootfsPath, "rootfs", "var", "spool", "mail"), 0755)
+	_ = os.MkdirAll(filepath.Join(rootfsPath, "rootfs", "home"), 0755)
+
 	for _, dev := range []string{"null", "zero", "random", "urandom", "tty", "console"} {
 		path := filepath.Join(rootfsPath, "rootfs", "dev", dev)
 		if pathExists(path) {
@@ -253,11 +227,6 @@ func findHelper() (string, error) {
 }
 
 func StartSandBox(rootfsPath string, duration time.Duration) error {
-
-	if err := checkConcurrencyCap(); err != nil {
-		return err
-	}
-	defer releaseConcurrencyCap()
 
 	master, slave, err := pty.Open()
 	if err != nil {
@@ -340,4 +309,46 @@ func StartSandBox(rootfsPath string, duration time.Duration) error {
 	cleanupSession(rootfsPath, sessionID)
 
 	return cmdErr
+}
+
+func copyFile(src, dst string) error {
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	d, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	if _, err := io.Copy(d, s); err != nil {
+		return err
+	}
+
+	si, err := os.Stat(src)
+	if err == nil {
+		os.Chmod(dst, si.Mode())
+	}
+
+	return nil
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(dst, rel)
+		if info.IsDir() {
+			return os.MkdirAll(target, info.Mode())
+		}
+		return copyFile(path, target)
+	})
 }
