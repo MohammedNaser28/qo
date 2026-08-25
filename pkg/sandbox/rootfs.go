@@ -183,7 +183,7 @@ func ExtractRootfs(rootfsPath string) error {
 		}
 	}
 
-	missingApplets := []string{"sleep", "kill", "pkill", "killall", "stat", "passwd", "chpasswd", "adduser", "addgroup", "deluser", "delgroup", "wc", "head", "tail", "tr", "cut", "more", "strings", "diff"}
+	missingApplets := []string{"sleep", "kill", "pkill", "killall", "stat", "passwd", "chpasswd", "adduser", "addgroup", "deluser", "delgroup", "wc", "head", "tail", "tr", "cut", "more", "strings", "diff", "readlink"}
 	binDir := filepath.Join(rootfsPath, "rootfs", "bin")
 	for _, applet := range missingApplets {
 		target := filepath.Join(binDir, applet)
