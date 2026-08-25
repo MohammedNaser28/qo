@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -178,7 +179,10 @@ func ExtractRootfs(rootfsPath string) error {
 			}
 			dev := int(unix.Mkdev(uint32(header.Devmajor), uint32(header.Devminor)))
 			if err := syscall.Mknod(destPath, syscall.S_IFCHR|0666, dev); err != nil {
-				return err
+				// Non-fatal: creating device nodes needs real root or an
+				// init userns. qo-init provides working /dev entries via
+				// host bind-mounts regardless.
+				logger.Warn(fmt.Sprintf("mknod %s: %v (continuing)", destPath, err))
 			}
 		}
 	}
@@ -190,6 +194,21 @@ func ExtractRootfs(rootfsPath string) error {
 		if _, err := os.Lstat(target); os.IsNotExist(err) {
 			_ = os.Symlink("busybox", target)
 		}
+	}
+
+	// Then expose every applet busybox itself advertises — tar, ln, date,
+	// xargs, checksums, network tools, … Real binaries already in /bin win
+	// (the Lstat guard skips them). This keeps the sandbox usable without
+	// maintaining a manual list per challenge.
+	if out, err := exec.Command(filepath.Join(binDir, "busybox"), "--list").Output(); err == nil {
+		for _, applet := range strings.Fields(string(out)) {
+			target := filepath.Join(binDir, applet)
+			if _, err := os.Lstat(target); os.IsNotExist(err) {
+				_ = os.Symlink("busybox", target)
+			}
+		}
+	} else {
+		logger.Warn(fmt.Sprintf("busybox --list failed, only default applets linked: %v", err))
 	}
 
 	// Mail spool — useradd complains ("Creating mailbox file") when missing.
