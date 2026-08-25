@@ -122,7 +122,7 @@ func normalizeMeta(meta *ChallengeMetadata) {
 }
 
 func DiscoverLevelsFromRootfs(rootfsPath string) ([]ChallengeLevel, error) {
-	tmpDir := filepath.Join(rootfsPath, "rootfs", "tmp")
+	tmpDir := filepath.Join(rootfsPath, "rootfs", "root", "challenges")
 	entries, err := os.ReadDir(tmpDir)
 	if err != nil {
 		return nil, err

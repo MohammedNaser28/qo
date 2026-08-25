@@ -486,7 +486,7 @@ func WriteCheckStubs() (int, error) {
 
 	n := 0
 	for _, lvl := range levels {
-		stub := filepath.Join(Rootfs, "rootfs", "tmp", lvl, checkStubName)
+		stub := filepath.Join(Rootfs, "rootfs", "root", "challenges", lvl, checkStubName)
 		if err := os.MkdirAll(filepath.Dir(stub), 0755); err != nil {
 			return n, err
 		}

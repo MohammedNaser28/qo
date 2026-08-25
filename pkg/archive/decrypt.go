@@ -162,7 +162,7 @@ func DecryptTarArchive(encryptedFile, password, utKey string, rootfsPath string)
 			continue // meta.yaml is server-side only — never extracted to sandbox
 		}
 
-		dest := filepath.Join(rootfsPath, "rootfs", "tmp", header.Name)
+		dest := filepath.Join(rootfsPath, "rootfs", "root", "challenges", header.Name)
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.MkdirAll(dest, os.FileMode(header.Mode)); err != nil {

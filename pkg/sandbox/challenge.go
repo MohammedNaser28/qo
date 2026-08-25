@@ -30,7 +30,7 @@ type ChallengeLevel struct {
 }
 
 func discoverLevels(rootfsPath string) ([]ChallengeLevel, error) {
-	tmpDir := filepath.Join(rootfsPath, "rootfs", "tmp")
+	tmpDir := filepath.Join(rootfsPath, "rootfs", "root", "challenges")
 
 	for attempt := 0; attempt < 20; attempt++ {
 		entries, err := os.ReadDir(tmpDir)
@@ -73,12 +73,12 @@ func discoverLevels(rootfsPath string) ([]ChallengeLevel, error) {
 }
 
 func checkScript(rootfsPath string, levelID int, stdinInput string) (bool, error) {
-	scriptPath := filepath.Join(rootfsPath, "rootfs", "tmp", fmt.Sprintf("level%d", levelID), "check.sh")
+	scriptPath := filepath.Join(rootfsPath, "rootfs", "root", "challenges", fmt.Sprintf("level%d", levelID), "check.sh")
 	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
 		return false, nil
 	}
 	cmd := exec.Command("/bin/bash", scriptPath)
-	cmd.Dir = filepath.Join(rootfsPath, "rootfs", "tmp", fmt.Sprintf("level%d", levelID))
+	cmd.Dir = filepath.Join(rootfsPath, "rootfs", "root", "challenges", fmt.Sprintf("level%d", levelID))
 	if stdinInput != "" {
 		cmd.Stdin = strings.NewReader(stdinInput + "\n")
 	}
