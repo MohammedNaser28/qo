@@ -43,12 +43,12 @@ type ChallengeLevel struct {
 }
 
 type ChallengeMetadata struct {
-	Title       string            `yaml:"title,omitempty" json:"title,omitempty"`
-	Difficulty  string            `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
-	Story       string            `yaml:"story,omitempty" json:"story,omitempty"`
-	Question    string            `yaml:"question,omitempty" json:"question,omitempty"`
-	Levels      []ChallengeLevel  `yaml:"levels,omitempty" json:"levels,omitempty"`
-	DefaultHint string            `yaml:"default_hint,omitempty" json:"default_hint,omitempty"`
+	Title       string           `yaml:"title,omitempty" json:"title,omitempty"`
+	Difficulty  string           `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
+	Story       string           `yaml:"story,omitempty" json:"story,omitempty"`
+	Question    string           `yaml:"question,omitempty" json:"question,omitempty"`
+	Levels      []ChallengeLevel `yaml:"levels,omitempty" json:"levels,omitempty"`
+	DefaultHint string           `yaml:"default_hint,omitempty" json:"default_hint,omitempty"`
 }
 
 func DecryptMetadata(encryptedFile, password string) (*ChallengeMetadata, error) {
